@@ -4,7 +4,6 @@ Loads settings from environment variables with sensible defaults.
 """
 
 from pydantic_settings import BaseSettings
-from typing import Optional
 
 
 class Settings(BaseSettings):

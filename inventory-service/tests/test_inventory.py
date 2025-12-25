@@ -6,7 +6,7 @@ Tests all endpoints with mocked MongoDB and validation scenarios.
 import pytest
 from httpx import AsyncClient
 from datetime import datetime
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 from fastapi import status
 
 from app.main import app

@@ -5,13 +5,11 @@ Handles inventory operations and stock movements with proper validation.
 
 from datetime import datetime
 from typing import Optional
-from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.schemas import (
     InventoryCreateRequest,
     InventoryUpdateRequest,
-    StockAdjustRequest,
-    InventoryResponse
+    StockAdjustRequest
 )
 import logging
 
