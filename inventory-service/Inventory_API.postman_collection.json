@@ -1,0 +1,630 @@
+{
+	"info": {
+		"name": "Inventory Microservice API",
+		"description": "Complete collection for testing the simplified Inventory API with MongoDB",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "inventory-api-v1"
+	},
+	"item": [
+		{
+			"name": "Health Check",
+			"item": [
+				{
+					"name": "Get Health Status",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8001/api/v1/health",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"api",
+								"v1",
+								"health"
+							]
+						},
+						"description": "Check if the service and database are healthy"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Inventory Management",
+			"item": [
+				{
+					"name": "List All Inventory Items",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8001/api/v1/inventory/items?page=1&limit=20",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"api",
+								"v1",
+								"inventory",
+								"items"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Page number (default: 1)"
+								},
+								{
+									"key": "limit",
+									"value": "20",
+									"description": "Items per page (default: 20, max: 100)"
+								},
+								{
+									"key": "product_id",
+									"value": "PROD-001",
+									"description": "Optional: Filter by product ID",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get paginated list of all inventory items"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Single Inventory Item",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8001/api/v1/inventory/items/PROD-001",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"api",
+								"v1",
+								"inventory",
+								"items",
+								"PROD-001"
+							]
+						},
+						"description": "Get inventory details for a specific product"
+					},
+					"response": []
+				},
+				{
+					"name": "Create New Inventory Item",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"product_id\": \"PROD-001\",\n  \"quantity\": 100,\n  \"warehouse_location\": \"WH-A1\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8001/api/v1/inventory/items",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"api",
+								"v1",
+								"inventory",
+								"items"
+							]
+						},
+						"description": "Create a new inventory record with initial stock"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Inventory Quantity",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"quantity\": 150,\n  \"reason\": \"Manual restock\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8001/api/v1/inventory/items/PROD-001",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"api",
+								"v1",
+								"inventory",
+								"items",
+								"PROD-001"
+							]
+						},
+						"description": "Update inventory quantity to a specific value (sets absolute value)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Stock Adjustments",
+			"item": [
+				{
+					"name": "Adjust Stock - Add (Restock)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"quantity\": 50,\n  \"reason\": \"Restocked from supplier\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8001/api/v1/inventory/items/PROD-001/adjust",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"api",
+								"v1",
+								"inventory",
+								"items",
+								"PROD-001",
+								"adjust"
+							]
+						},
+						"description": "Add stock by providing a positive quantity value"
+					},
+					"response": []
+				},
+				{
+					"name": "Adjust Stock - Subtract (Sale)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"quantity\": -5,\n  \"reason\": \"Sold to customer\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8001/api/v1/inventory/items/PROD-001/adjust",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"api",
+								"v1",
+								"inventory",
+								"items",
+								"PROD-001",
+								"adjust"
+							]
+						},
+						"description": "Subtract stock by providing a negative quantity value"
+					},
+					"response": []
+				},
+				{
+					"name": "Adjust Stock - Damage/Loss",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"quantity\": -3,\n  \"reason\": \"Damaged goods\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8001/api/v1/inventory/items/PROD-001/adjust",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"api",
+								"v1",
+								"inventory",
+								"items",
+								"PROD-001",
+								"adjust"
+							]
+						},
+						"description": "Record damaged or lost inventory"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Test Scenarios",
+			"item": [
+				{
+					"name": "Create Product PROD-002",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"product_id\": \"PROD-002\",\n  \"quantity\": 50,\n  \"warehouse_location\": \"WH-B2\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8001/api/v1/inventory/items",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"api",
+								"v1",
+								"inventory",
+								"items"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Product PROD-003",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"product_id\": \"PROD-003\",\n  \"quantity\": 200,\n  \"warehouse_location\": \"WH-C3\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8001/api/v1/inventory/items",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"api",
+								"v1",
+								"inventory",
+								"items"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Test Negative Stock Prevention",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"quantity\": -1000,\n  \"reason\": \"This should fail - insufficient stock\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8001/api/v1/inventory/items/PROD-001/adjust",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"api",
+								"v1",
+								"inventory",
+								"items",
+								"PROD-001",
+								"adjust"
+							]
+						},
+						"description": "This should return a 400 error - insufficient stock"
+					},
+					"response": []
+				},
+				{
+					"name": "Test Product Not Found",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8001/api/v1/inventory/items/NONEXISTENT",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"api",
+								"v1",
+								"inventory",
+								"items",
+								"NONEXISTENT"
+							]
+						},
+						"description": "This should return a 404 error - product not found"
+					},
+					"response": []
+				},
+				{
+					"name": "Test Duplicate Product",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"product_id\": \"PROD-001\",\n  \"quantity\": 100,\n  \"warehouse_location\": \"WH-A1\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8001/api/v1/inventory/items",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"api",
+								"v1",
+								"inventory",
+								"items"
+							]
+						},
+						"description": "This should return a 400 error - product already exists (after running Create PROD-001 first)"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Complete Workflow Example",
+			"item": [
+				{
+					"name": "1. Create iPhone 15 Pro",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"product_id\": \"IPHONE-15-PRO\",\n  \"quantity\": 100,\n  \"warehouse_location\": \"WH-ELECTRONICS\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8001/api/v1/inventory/items",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"api",
+								"v1",
+								"inventory",
+								"items"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2. Check iPhone Stock",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8001/api/v1/inventory/items/IPHONE-15-PRO",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"api",
+								"v1",
+								"inventory",
+								"items",
+								"IPHONE-15-PRO"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3. Customer Buys 5 Units",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"quantity\": -5,\n  \"reason\": \"Sold to customer - Order #12345\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8001/api/v1/inventory/items/IPHONE-15-PRO/adjust",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"api",
+								"v1",
+								"inventory",
+								"items",
+								"IPHONE-15-PRO",
+								"adjust"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "4. Receive New Shipment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"quantity\": 50,\n  \"reason\": \"Restocked from Apple supplier\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8001/api/v1/inventory/items/IPHONE-15-PRO/adjust",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"api",
+								"v1",
+								"inventory",
+								"items",
+								"IPHONE-15-PRO",
+								"adjust"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "5. Damaged Item Return",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"quantity\": -1,\n  \"reason\": \"Damaged during shipping\"\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8001/api/v1/inventory/items/IPHONE-15-PRO/adjust",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"api",
+								"v1",
+								"inventory",
+								"items",
+								"IPHONE-15-PRO",
+								"adjust"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "6. Final Stock Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8001/api/v1/inventory/items/IPHONE-15-PRO",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"api",
+								"v1",
+								"inventory",
+								"items",
+								"IPHONE-15-PRO"
+							]
+						},
+						"description": "Should show: 100 - 5 + 50 - 1 = 144 units"
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8001",
+			"type": "string"
+		},
+		{
+			"key": "apiVersion",
+			"value": "v1",
+			"type": "string"
+		}
+	]
+}
