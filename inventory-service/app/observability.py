@@ -11,7 +11,39 @@ from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTEN
 from pythonjsonlogger import jsonlogger
 import sys
 
-# Prometheus Metrics
+# Prometheus Metrics - HTTP
+HTTP_REQUESTS_TOTAL = Counter(
+    'http_requests_total',
+    'Total HTTP requests',
+    ['method', 'endpoint', 'status_code']
+)
+
+HTTP_REQUESTS_INPROGRESS = Gauge(
+    'http_requests_inprogress',
+    'HTTP requests currently being processed',
+    ['method', 'endpoint']
+)
+
+HTTP_REQUEST_DURATION_SECONDS = Histogram(
+    'http_request_duration_seconds',
+    'HTTP request latency in seconds',
+    ['method', 'endpoint', 'status_code'],
+    buckets=(0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1.0, 2.5, 5.0, 7.5, 10.0)
+)
+
+HTTP_REQUEST_SIZE_BYTES = Histogram(
+    'http_request_size_bytes',
+    'HTTP request size in bytes',
+    ['method', 'endpoint']
+)
+
+HTTP_RESPONSE_SIZE_BYTES = Histogram(
+    'http_response_size_bytes',
+    'HTTP response size in bytes',
+    ['method', 'endpoint']
+)
+
+# Prometheus Metrics - Application Specific
 REQUEST_COUNT = Counter(
     'inventory_requests_total',
     'Total number of requests',
@@ -76,7 +108,7 @@ class StructuredLogger:
 
 
 class RequestTracingMiddleware:
-    """Middleware for request tracing with correlation IDs."""
+    """Middleware for request tracing with correlation IDs and HTTP metrics."""
     
     def __init__(self, app):
         self.app = app
@@ -91,33 +123,88 @@ class RequestTracingMiddleware:
         trace_id = str(uuid.uuid4())
         scope["trace_id"] = trace_id
         
+        method = scope.get("method", "")
+        path = scope.get("path", "")
+        
         # Track active requests
         ACTIVE_REQUESTS.inc()
+        HTTP_REQUESTS_INPROGRESS.labels(method=method, endpoint=path).inc()
         
         start_time = time.time()
+        status_code = 500  # Default to error
+        request_size = 0
+        response_size = 0
+        
+        # Calculate request size
+        if "headers" in scope:
+            for header, value in scope["headers"]:
+                request_size += len(header) + len(value)
         
         async def send_wrapper(message):
+            nonlocal status_code, response_size
+            
             if message["type"] == "http.response.start":
+                status_code = message.get("status", 500)
+                
                 # Add trace ID to response headers
                 headers = list(message.get("headers", []))
                 headers.append((b"x-trace-id", trace_id.encode()))
                 message["headers"] = headers
+                
+                # Calculate response header size
+                for header, value in headers:
+                    response_size += len(header) + len(value)
+            
+            elif message["type"] == "http.response.body":
+                # Add response body size
+                body = message.get("body", b"")
+                response_size += len(body)
+            
             await send(message)
         
         try:
             await self.app(scope, receive, send_wrapper)
         finally:
             duration = time.time() - start_time
+            
+            # Decrement active request counters
             ACTIVE_REQUESTS.dec()
+            HTTP_REQUESTS_INPROGRESS.labels(method=method, endpoint=path).dec()
+            
+            # Record HTTP metrics
+            HTTP_REQUESTS_TOTAL.labels(
+                method=method,
+                endpoint=path,
+                status_code=status_code
+            ).inc()
+            
+            HTTP_REQUEST_DURATION_SECONDS.labels(
+                method=method,
+                endpoint=path,
+                status_code=status_code
+            ).observe(duration)
+            
+            HTTP_REQUEST_SIZE_BYTES.labels(
+                method=method,
+                endpoint=path
+            ).observe(request_size)
+            
+            HTTP_RESPONSE_SIZE_BYTES.labels(
+                method=method,
+                endpoint=path
+            ).observe(response_size)
             
             # Log request
             self.logger.info(
                 "Request completed",
                 extra={
                     "trace_id": trace_id,
-                    "method": scope.get("method"),
-                    "path": scope.get("path"),
-                    "duration": duration
+                    "method": method,
+                    "path": path,
+                    "status_code": status_code,
+                    "duration_ms": round(duration * 1000, 2),
+                    "request_size_bytes": request_size,
+                    "response_size_bytes": response_size
                 }
             )
 
