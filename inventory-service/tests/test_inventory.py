@@ -173,7 +173,7 @@ class TestCreateInventory:
         data = response.json()
         assert data["product_id"] == "PROD-002"
         assert data["on_hand"] == 50
-    quantity
+    
     @pytest.mark.asyncio
     async def test_create_inventory_duplicate(self, client, mock_db, mock_inventory_data):
         """Test creating inventory for existing product."""
