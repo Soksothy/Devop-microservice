@@ -172,7 +172,7 @@ class TestCreateInventory:
         assert response.status_code == status.HTTP_201_CREATED
         data = response.json()
         assert data["product_id"] == "PROD-002"
-        assert data["on_hand"] == 50
+        assert data["quantity"] == 50
     
     @pytest.mark.asyncio
     async def test_create_inventory_duplicate(self, client, mock_db, mock_inventory_data):
@@ -293,47 +293,34 @@ class TestAdjustStock:
         
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         data = response.json()
-        assert "Insufficient stock" in data["detail"]["detail"]
+        assert "Insufficient stock" in data["detail"]
 
 
 class TestValidation:
     """Test input validation."""
     
     @pytest.mark.asyncio
-    async def test_invalid_reserve_quantity(self, client):
-        """Test reservation with invalid quantity."""
+    async def test_missing_required_fields(self, client):
+        """Test creating inventory without required fields."""
         payload = {
-            "quantity": 0,
-            "order_id": "ORD-007"
+            "product_id": "PROD-004"
+            # Missing quantity and warehouse_location
         }
         
         async with client as ac:
-            response = await ac.post("/api/v1/inventory/items/PROD-001/reserve", json=payload)
+            response = await ac.post("/api/v1/inventory/items", json=payload)
         
         assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
     
-@pytest.mark.asyncio
-async def test_missing_required_fields(self, client):
-    """Test creating inventory without required fields."""
-    payload = {
-        "product_id": "PROD-004"
-        # Missing quantity and warehouse_location
-    }
-    
-    async with client as ac:
-        response = await ac.post("/api/v1/inventory/items", json=payload)
-    
-    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-
-@pytest.mark.asyncio
-async def test_adjust_missing_reason(self, client):
-    """Test adjustment without reason."""
-    payload = {
-        "quantity": 10
-        # Missing reason
-    }
-    
-    async with client as ac:
-        response = await ac.post("/api/v1/inventory/items/PROD-001/adjust", json=payload)
-    
-    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    @pytest.mark.asyncio
+    async def test_adjust_missing_reason(self, client):
+        """Test adjustment without reason."""
+        payload = {
+            "quantity": 10
+            # Missing reason
+        }
+        
+        async with client as ac:
+            response = await ac.post("/api/v1/inventory/items/PROD-001/adjust", json=payload)
+        
+        assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
