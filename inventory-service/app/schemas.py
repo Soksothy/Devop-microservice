@@ -34,6 +34,17 @@ class StockAdjustRequest(BaseModel):
     reason: str = Field(..., min_length=1, description="Reason for adjustment")
 
 
+class StockCheckRequest(BaseModel):
+    """Request schema for checking stock availability (used by order service)."""
+    product_id: str = Field(..., description="Product identifier")
+    required_quantity: int = Field(..., gt=0, description="Required quantity to check")
+
+
+class BulkStockCheckRequest(BaseModel):
+    """Request schema for checking multiple products stock availability."""
+    items: List[StockCheckRequest] = Field(..., min_length=1, description="List of products to check")
+
+
 # Response Schemas
 class InventoryResponse(BaseModel):
     """Response schema for inventory item."""
@@ -58,6 +69,21 @@ class StockMovementResponse(BaseModel):
     
     class Config:
         from_attributes = True
+
+
+class StockAvailabilityResponse(BaseModel):
+    """Response schema for stock availability check."""
+    product_id: str
+    available: bool
+    current_quantity: int
+    required_quantity: int
+    warehouse_location: str
+
+
+class BulkStockAvailabilityResponse(BaseModel):
+    """Response schema for bulk stock availability check."""
+    all_available: bool
+    items: List[StockAvailabilityResponse]
 
 
 class PaginatedInventoryResponse(BaseModel):

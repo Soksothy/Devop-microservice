@@ -15,9 +15,13 @@ from app.schemas import (
     InventoryCreateRequest,
     InventoryUpdateRequest,
     StockAdjustRequest,
+    StockCheckRequest,
+    BulkStockCheckRequest,
     InventoryResponse,
     PaginatedInventoryResponse,
-    HealthResponse
+    HealthResponse,
+    StockAvailabilityResponse,
+    BulkStockAvailabilityResponse
 )
 from app.config import settings
 
@@ -307,3 +311,123 @@ async def adjust_stock(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e)
         )
+
+
+@router.post(
+    "/inventory/check-availability",
+    response_model=StockAvailabilityResponse,
+    tags=["Stock Operations"]
+)
+async def check_stock_availability(
+    data: StockCheckRequest,
+    db: AsyncIOMotorDatabase = Depends(get_database)
+):
+    """
+    Check if sufficient stock is available for a product (used by order service).
+    
+    Args:
+        data: Stock check request with product_id and required_quantity
+        
+    Returns:
+        Stock availability status with current quantity
+        
+    Raises:
+        HTTPException: 404 if product not found
+    """
+    try:
+        model = InventoryModel(db)
+        inventory = await model.get_inventory(data.product_id)
+        
+        if not inventory:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Product {data.product_id} not found"
+            )
+        
+        current_quantity = inventory["quantity"]
+        is_available = current_quantity >= data.required_quantity
+        
+        return StockAvailabilityResponse(
+            product_id=data.product_id,
+            available=is_available,
+            current_quantity=current_quantity,
+            required_quantity=data.required_quantity,
+            warehouse_location=inventory["warehouse_location"]
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error checking stock availability for {data.product_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+
+
+@router.post(
+    "/inventory/check-availability/bulk",
+    response_model=BulkStockAvailabilityResponse,
+    tags=["Stock Operations"]
+)
+async def check_bulk_stock_availability(
+    data: BulkStockCheckRequest,
+    db: AsyncIOMotorDatabase = Depends(get_database)
+):
+    """
+    Check stock availability for multiple products at once (used by order service).
+    
+    Args:
+        data: Bulk stock check request with list of products
+        
+    Returns:
+        Bulk availability status for all requested products
+        
+    Raises:
+        HTTPException: 500 if error occurs
+    """
+    try:
+        model = InventoryModel(db)
+        results = []
+        all_available = True
+        
+        for item in data.items:
+            inventory = await model.get_inventory(item.product_id)
+            
+            if not inventory:
+                # Product not found, mark as unavailable
+                results.append(StockAvailabilityResponse(
+                    product_id=item.product_id,
+                    available=False,
+                    current_quantity=0,
+                    required_quantity=item.required_quantity,
+                    warehouse_location="N/A"
+                ))
+                all_available = False
+            else:
+                current_quantity = inventory["quantity"]
+                is_available = current_quantity >= item.required_quantity
+                
+                if not is_available:
+                    all_available = False
+                
+                results.append(StockAvailabilityResponse(
+                    product_id=item.product_id,
+                    available=is_available,
+                    current_quantity=current_quantity,
+                    required_quantity=item.required_quantity,
+                    warehouse_location=inventory["warehouse_location"]
+                ))
+        
+        return BulkStockAvailabilityResponse(
+            all_available=all_available,
+            items=results
+        )
+        
+    except Exception as e:
+        logger.error(f"Error checking bulk stock availability: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+

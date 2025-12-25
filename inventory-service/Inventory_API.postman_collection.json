@@ -613,6 +613,141 @@
 					"response": []
 				}
 			]
+		},
+		{
+			"name": "Stock Availability (Order Service)",
+			"item": [
+				{
+					"name": "Check Single Product Availability",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"product_id\": \"PROD-001\",\n  \"required_quantity\": 10\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8001/api/v1/inventory/check-availability",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"api",
+								"v1",
+								"inventory",
+								"check-availability"
+							]
+						},
+						"description": "Check if sufficient stock is available for a single product (used by order service)"
+					},
+					"response": []
+				},
+				{
+					"name": "Check Insufficient Stock",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"product_id\": \"PROD-001\",\n  \"required_quantity\": 1000\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8001/api/v1/inventory/check-availability",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"api",
+								"v1",
+								"inventory",
+								"check-availability"
+							]
+						},
+						"description": "Test case where required quantity exceeds available stock"
+					},
+					"response": []
+				},
+				{
+					"name": "Bulk Check Availability - All Available",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"items\": [\n    {\n      \"product_id\": \"PROD-001\",\n      \"required_quantity\": 5\n    },\n    {\n      \"product_id\": \"PROD-002\",\n      \"required_quantity\": 10\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8001/api/v1/inventory/check-availability/bulk",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"api",
+								"v1",
+								"inventory",
+								"check-availability",
+								"bulk"
+							]
+						},
+						"description": "Check stock availability for multiple products at once (for validating entire orders)"
+					},
+					"response": []
+				},
+				{
+					"name": "Bulk Check - Mixed Availability",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"items\": [\n    {\n      \"product_id\": \"PROD-001\",\n      \"required_quantity\": 5\n    },\n    {\n      \"product_id\": \"PROD-002\",\n      \"required_quantity\": 1000\n    },\n    {\n      \"product_id\": \"PROD-999\",\n      \"required_quantity\": 10\n    }\n  ]\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8001/api/v1/inventory/check-availability/bulk",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8001",
+							"path": [
+								"api",
+								"v1",
+								"inventory",
+								"check-availability",
+								"bulk"
+							]
+						},
+						"description": "Test case with mixed availability: some products available, some insufficient, some not found"
+					},
+					"response": []
+				}
+			]
 		}
 	],
 	"variable": [

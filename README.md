@@ -1,46 +1,59 @@
-# Inventory Microservice
+# Inventory Microservice 🏪
 
-A production-ready FastAPI microservice for managing e-commerce inventory with MongoDB, featuring simple stock tracking with adjustments and comprehensive audit trails.
+A production-ready FastAPI microservice for managing e-commerce inventory with MongoDB, featuring automated CI/CD deployment to DigitalOcean.
 
 ## 🚀 Features
 
 - **RESTful API** with versioning (`/api/v1`)
 - **Async/Await** operations for high performance
 - **MongoDB** with Motor (async driver) and connection pooling
-- **Simple Stock Tracking**: Single quantity field with add/subtract adjustments
+- **Stock Management**: Create, update, and adjust inventory quantities
 - **Audit Trail**: Complete stock movement history
 - **Pagination**: Efficient data retrieval with configurable limits
 - **Docker Support**: Multi-stage builds with health checks
-- **CI/CD Pipeline**: Automated testing, linting, and deployment
-- **Comprehensive Tests**: pytest with async support and mocking
-- **Production-Ready**: Exception handling, logging, CORS, non-root containers
+- **Automated CI/CD**: Test, build, and deploy on every push
+- **Comprehensive Tests**: 16 tests with 78%+ coverage
+- **Production-Ready**: Exception handling, logging, CORS, security
 
-## 📋 Prerequisites
+## 🌐 Live API
+
+**Base URL**: http://68.183.227.95:8001
+
+- **API Docs**: http://68.183.227.95:8001/api/v1/docs
+- **Health Check**: http://68.183.227.95:8001/api/v1/health
+
+## 📋 Tech Stack
+
+- **Backend**: FastAPI 0.115.0, Python 3.11
+- **Database**: MongoDB 7.0
+- **Web Server**: Uvicorn (ASGI)
+- **Testing**: Pytest, pytest-asyncio, pytest-cov
+- **Linting**: Ruff
+- **Containerization**: Docker, Docker Compose
+- **CI/CD**: GitHub Actions
+- **Deployment**: DigitalOcean Droplet
+
+## 🛠️ Local Development
+
+### Prerequisites
 
 - Python 3.11+
 - MongoDB 7.0+
 - Docker & Docker Compose (optional)
-- Git
 
-## 🛠️ Setup Instructions
-
-### Local Development Setup
+### Setup
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/Soksothy/Devop02.git
    cd Devop02/inventory-service
    ```
 
 2. **Create virtual environment**
    ```bash
    python -m venv venv
-   
-   # Windows
-   venv\Scripts\activate
-   
-   # Linux/Mac
-   source venv/bin/activate
+   source venv/bin/activate  # Linux/Mac
+   venv\Scripts\activate     # Windows
    ```
 
 3. **Install dependencies**
@@ -48,42 +61,396 @@ A production-ready FastAPI microservice for managing e-commerce inventory with M
    pip install -r requirements.txt
    ```
 
-4. **Configure environment variables**
+4. **Start MongoDB and Application**
+   
+   **Option A: Using Docker Compose (Recommended)**
    ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
+   docker-compose up -d
    ```
-
-5. **Start MongoDB locally**
+   
+   **Option B: Manual Setup**
    ```bash
-   # Using Docker
+   # Start MongoDB
    docker run -d -p 27017:27017 --name mongodb mongo:7.0
    
-   # Or install MongoDB locally
-   ```
-
-6. **Run the application**
-   ```bash
+   # Run the application
    python -m uvicorn app.main:app --reload --port 8001
    ```
 
-7. **Access the API documentation**
-   - Swagger UI: http://localhost:8001/api/v1/docs
-   - ReDoc: http://localhost:8001/api/v1/redoc
+5. **Access the API**
+   - **Swagger UI**: http://localhost:8001/api/v1/docs
+   - **ReDoc**: http://localhost:8001/api/v1/redoc
+   - **Health Check**: http://localhost:8001/api/v1/health
 
-### Docker Setup
+## 📚 API Documentation
 
-1. **Using Docker Compose (Recommended)**
+### Available Endpoints
+
+#### Health Check
+```http
+GET /api/v1/health
+```
+Check service and database connectivity.
+
+#### List Inventory Items
+```http
+GET /api/v1/inventory/items?page=1&limit=20&product_id=PROD-001
+```
+
+**Query Parameters:**
+- `page` (int): Page number (default: 1)
+- `limit` (int): Items per page (default: 20, max: 100)
+- `product_id` (string, optional): Filter by product ID
+
+**Response:**
+```json
+{
+  "current_page": 1,
+  "per_page": 20,
+  "total": 100,
+  "last_page": 5,
+  "data": [
+    {
+      "product_id": "PROD-001",
+      "quantity": 100,
+      "warehouse_location": "WH-A1",
+      "created_at": "2025-12-25T14:00:00",
+      "updated_at": "2025-12-25T14:00:00"
+    }
+  ]
+}
+```
+
+#### Get Single Inventory Item
+```http
+GET /api/v1/inventory/items/{product_id}
+```
+
+#### Create Inventory Item
+```http
+POST /api/v1/inventory/items
+Content-Type: application/json
+
+{
+  "product_id": "PROD-002",
+  "quantity": 50,
+  "warehouse_location": "WH-B1"
+}
+```
+
+#### Update Inventory Item
+```http
+PUT /api/v1/inventory/items/{product_id}
+Content-Type: application/json
+
+{
+  "quantity": 75,
+  "warehouse_location": "WH-A2"
+}
+```
+
+#### Adjust Stock (Add/Subtract)
+```http
+POST /api/v1/inventory/items/{product_id}/adjust
+Content-Type: application/json
+
+{
+  "quantity": -10,
+  "reason": "Sold 10 units"
+}
+```
+- Use **positive** values to add stock
+- Use **negative** values to subtract stock
+
+#### Check Stock Availability (For Order Service)
+```http
+POST /api/v1/inventory/check-availability
+Content-Type: application/json
+
+{
+  "product_id": "PROD-001",
+  "required_quantity": 10
+}
+```
+
+**Response:**
+```json
+{
+  "product_id": "PROD-001",
+  "available": true,
+  "current_quantity": 100,
+  "required_quantity": 10,
+  "warehouse_location": "WH-A1"
+}
+```
+
+#### Bulk Check Stock Availability
+```http
+POST /api/v1/inventory/check-availability/bulk
+Content-Type: application/json
+
+{
+  "items": [
+    {
+      "product_id": "PROD-001",
+      "required_quantity": 5
+    },
+    {
+      "product_id": "PROD-002",
+      "required_quantity": 10
+    }
+  ]
+}
+```
+
+**Response:**
+```json
+{
+  "all_available": true,
+  "items": [
+    {
+      "product_id": "PROD-001",
+      "available": true,
+      "current_quantity": 100,
+      "required_quantity": 5,
+      "warehouse_location": "WH-A1"
+    },
+    {
+      "product_id": "PROD-002",
+      "available": true,
+      "current_quantity": 50,
+      "required_quantity": 10,
+      "warehouse_location": "WH-B1"
+    }
+  ]
+}
+```
+
+## 🧪 Testing
+
+### Run Tests
+```bash
+# Run all tests with coverage
+pytest tests/ -v --cov=app --cov-report=term-missing
+
+# Run specific test
+pytest tests/test_inventory.py::TestHealthEndpoint -v
+
+# Run with detailed output
+pytest tests/ -vv
+```
+
+### Test Coverage
+- **16 tests** covering all endpoints
+- **78%+ code coverage**
+- Async testing with mocked MongoDB
+
+## 🚀 CI/CD Pipeline
+
+### Automated Workflow
+
+Every push to `main` triggers:
+
+1. **Test & Lint**
+   - Run pytest with coverage
+   - Lint code with Ruff
+
+2. **Build & Push**
+   - Build Docker image
+   - Push to Docker Hub: `soksothy/inventory-service:latest`
+
+3. **Deploy to DigitalOcean**
+   - SSH into droplet
+   - Pull latest image
+   - Restart containers
+   - Run health check
+
+### GitHub Secrets Required
+
+Add these secrets in **Settings → Secrets and variables → Actions**:
+
+- `DOCKER_USERNAME`: Docker Hub username
+- `DOCKER_PASSWORD`: Docker Hub password/token
+- `DO_HOST`: DigitalOcean droplet IP
+- `DO_PASSWORD`: Server root password
+
+## 🌐 Production Deployment
+
+### Manual Deployment to DigitalOcean
+
+1. **SSH into your server**
    ```bash
-   cd inventory-service
-   docker-compose up -d
+   ssh root@68.183.227.95
    ```
-   This starts both the API service and MongoDB with persistent volumes.
 
-2. **Build and run manually**
+2. **Create Docker network**
    ```bash
-   # Build image
-   docker build -t inventory-service .
+   docker network create inventory-network
+   ```
+
+3. **Start MongoDB**
+   ```bash
+   docker run -d \
+     --name inventory-mongodb \
+     --network inventory-network \
+     --restart unless-stopped \
+     -p 27017:27017 \
+     -v mongodb_data:/data/db \
+     -e MONGO_INITDB_DATABASE=inventory_db \
+     mongo:7.0
+   ```
+
+4. **Start API Service**
+   ```bash
+   docker run -d \
+     --name inventory-api \
+     --network inventory-network \
+     --restart unless-stopped \
+     -p 8001:8001 \
+     -e MONGODB_URI=mongodb://inventory-mongodb:27017 \
+     -e DATABASE_NAME=inventory_db \
+     -e PORT=8001 \
+     -e ENVIRONMENT=production \
+     soksothy/inventory-service:latest
+   ```
+
+5. **Verify Deployment**
+   ```bash
+   docker ps
+   docker logs inventory-api
+   curl http://localhost:8001/api/v1/health
+   ```
+
+## 📁 Project Structure
+
+```
+inventory-service/
+├── app/
+│   ├── __init__.py
+│   ├── main.py              # FastAPI app & startup
+│   ├── config.py            # Configuration settings
+│   ├── database.py          # MongoDB connection
+│   ├── schemas.py           # Pydantic models
+│   ├── models/
+│   │   ├── __init__.py
+│   │   └── inventory.py     # Business logic
+│   └── routers/
+│       ├── __init__.py
+│       └── inventory.py     # API endpoints
+├── tests/
+│   ├── __init__.py
+│   └── test_inventory.py    # Test suite
+├── .github/
+│   └── workflows/
+│       └── ci-cd.yml        # GitHub Actions
+├── Dockerfile               # Multi-stage build
+├── docker-compose.yml       # Local development
+├── requirements.txt         # Python dependencies
+└── README.md               # This file
+```
+
+## 🔧 Configuration
+
+### Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `MONGODB_URI` | `mongodb://localhost:27017` | MongoDB connection string |
+| `DATABASE_NAME` | `inventory_db` | Database name |
+| `PORT` | `8001` | API server port |
+| `ENVIRONMENT` | `development` | Environment mode |
+| `API_V1_PREFIX` | `/api/v1` | API version prefix |
+| `DEFAULT_PAGE_SIZE` | `20` | Default pagination size |
+| `MAX_PAGE_SIZE` | `100` | Maximum pagination size |
+
+## 🛡️ Security Features
+
+- ✅ Non-root Docker container
+- ✅ CORS configuration
+- ✅ Input validation with Pydantic
+- ✅ Error handling and logging
+- ✅ Health checks
+- ✅ Read-only file system
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**Issue**: `Cannot connect to MongoDB`
+```bash
+# Check MongoDB is running
+docker ps | grep mongodb
+
+# Check logs
+docker logs inventory-mongodb
+
+# Test connection
+docker exec -it inventory-mongodb mongosh
+```
+
+**Issue**: `Port 8001 already in use`
+```bash
+# Find process using port
+netstat -ano | findstr :8001  # Windows
+lsof -i :8001                  # Linux/Mac
+
+# Kill the process or change port
+PORT=8002 python -m uvicorn app.main:app --port 8002
+```
+
+**Issue**: `Tests failing`
+```bash
+# Clear pytest cache
+pytest --cache-clear
+
+# Run with verbose output
+pytest tests/ -vv
+```
+
+## 📊 Monitoring
+
+### Check Application Logs
+```bash
+# Docker logs
+docker logs inventory-api -f
+
+# Specific number of lines
+docker logs inventory-api --tail 100
+```
+
+### Monitor Container Health
+```bash
+# Container status
+docker ps
+
+# Resource usage
+docker stats inventory-api
+
+# Health check
+curl http://68.183.227.95:8001/api/v1/health
+```
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is for educational purposes.
+
+## 👨‍💻 Author
+
+**Soksothy**
+- GitHub: [@Soksothy](https://github.com/Soksothy)
+- Docker Hub: [soksothy](https://hub.docker.com/u/soksothy)
+
+---
+
+**⭐ Star this repo if you find it useful!**
    
    # Run container
    docker run -d -p 8001:8001 \
