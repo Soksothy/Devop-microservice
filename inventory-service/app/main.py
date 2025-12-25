@@ -3,7 +3,7 @@ FastAPI Inventory Microservice
 Main application entry point with middleware, exception handlers, and routing.
 """
 
-from fastapi import FastAPI, Request, Response, status
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
@@ -14,7 +14,6 @@ from app.routers import inventory
 from app.observability import (
     StructuredLogger,
     RequestTracingMiddleware,
-    metrics_middleware,
     get_prometheus_metrics
 )
 

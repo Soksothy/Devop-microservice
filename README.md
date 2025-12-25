@@ -795,7 +795,147 @@ docker system prune -a
 docker-compose build --no-cache
 ```
 
-## 📞 Support
+## � Observability & Monitoring
+
+The Inventory Service includes a comprehensive observability stack for production monitoring.
+
+### Features
+
+- **Prometheus Metrics**: Real-time performance metrics exported at `/metrics`
+- **Structured JSON Logging**: Machine-readable logs for log aggregation
+- **Request Tracing**: Correlation IDs for tracking requests across services
+- **Health Checks**: Liveness and readiness probes for Kubernetes
+- **Grafana Dashboards**: Pre-configured visualization (optional)
+
+### Quick Start - Observability Stack
+
+Run the full stack with Prometheus and Grafana:
+
+```bash
+cd inventory-service
+docker-compose -f docker-compose.observability.yml up -d
+```
+
+**Access Points:**
+- API: http://localhost:8001
+- API Docs: http://localhost:8001/api/v1/docs
+- Metrics: http://localhost:8001/metrics
+- Prometheus: http://localhost:9090
+- Grafana: http://localhost:3000 (admin/admin)
+
+### Available Metrics
+
+The service exposes the following Prometheus metrics:
+
+| Metric | Type | Description |
+|--------|------|-------------|
+| `inventory_requests_total` | Counter | Total HTTP requests by method, endpoint, and status |
+| `inventory_request_duration_seconds` | Histogram | Request latency distribution |
+| `inventory_active_requests` | Gauge | Currently active requests |
+| `inventory_db_operations_total` | Counter | Database operations by type |
+| `inventory_db_operation_duration_seconds` | Histogram | Database operation latency |
+| `inventory_total_items` | Gauge | Total inventory items in database |
+| `inventory_total_stock_quantity` | Gauge | Total stock quantity across all items |
+| `inventory_low_stock_items` | Gauge | Items with stock below threshold |
+
+### Health Check Endpoints
+
+**Liveness Probe** - Check if service is running
+```bash
+curl http://localhost:8001/health/live
+# Response: {"status": "alive"}
+```
+
+**Readiness Probe** - Check if service is ready (DB connected)
+```bash
+curl http://localhost:8001/health/ready
+# Response: {"status": "ready", "database": "connected"}
+```
+
+### Structured Logging
+
+All logs are output in JSON format for easy parsing by log aggregators (ELK, Splunk, etc.):
+
+```json
+{
+  "timestamp": "2024-01-15T10:30:45.123456",
+  "level": "INFO",
+  "message": "Request completed",
+  "trace_id": "abc123...",
+  "method": "POST",
+  "path": "/api/v1/inventory",
+  "status_code": 201,
+  "duration_ms": 45.67
+}
+```
+
+### Request Tracing
+
+Every request receives a unique `X-Trace-Id` header that appears in:
+- Response headers
+- All log entries for that request
+- Error responses
+
+Use trace IDs to track requests across services and correlate logs.
+
+### Grafana Dashboard Setup
+
+1. **Access Grafana**: http://localhost:3000 (admin/admin)
+2. **Prometheus is pre-configured** as a datasource
+3. **Create a dashboard** with these queries:
+
+**Request Rate:**
+```promql
+rate(inventory_requests_total[5m])
+```
+
+**95th Percentile Latency:**
+```promql
+histogram_quantile(0.95, rate(inventory_request_duration_seconds_bucket[5m]))
+```
+
+**Active Requests:**
+```promql
+inventory_active_requests
+```
+
+**Database Operation Rate:**
+```promql
+rate(inventory_db_operations_total[5m])
+```
+
+**Low Stock Items:**
+```promql
+inventory_low_stock_items
+```
+
+### Production Monitoring
+
+For production deployments:
+
+1. **Deploy Prometheus** to scrape `/metrics` endpoint
+2. **Configure Grafana** to visualize metrics
+3. **Set up alerts** for:
+   - High error rates (5xx responses)
+   - High latency (p95 > threshold)
+   - Database connection failures
+   - Low stock items above threshold
+
+4. **Aggregate logs** to a centralized logging system
+5. **Use trace IDs** to debug cross-service issues
+
+### Example Prometheus Configuration
+
+```yaml
+scrape_configs:
+  - job_name: 'inventory-service'
+    scrape_interval: 10s
+    static_configs:
+      - targets: ['68.183.227.95:8001']
+    metrics_path: '/metrics'
+```
+
+## �📞 Support
 
 For issues and questions:
 - Open an issue in the GitHub repository
