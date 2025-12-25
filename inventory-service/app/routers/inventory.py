@@ -112,7 +112,7 @@ async def list_inventory(
         logger.error(f"Error listing inventory: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"detail": str(e), "code": "LIST_ERROR"}
+            detail=str(e)
         )
 
 
@@ -140,7 +140,7 @@ async def get_inventory_item(
         if not inventory:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail={"detail": f"Product {product_id} not found", "code": "PRODUCT_NOT_FOUND"}
+                detail=f"Product {product_id} not found"
             )
         
         return InventoryResponse(
@@ -157,7 +157,7 @@ async def get_inventory_item(
         logger.error(f"Error getting inventory for {product_id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"detail": str(e), "code": "GET_ERROR"}
+            detail=str(e)
         )
 
 
@@ -198,13 +198,13 @@ async def create_inventory_item(
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail={"detail": str(e), "code": "PRODUCT_EXISTS"}
+            detail=str(e)
         )
     except Exception as e:
         logger.error(f"Error creating inventory: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"detail": str(e), "code": "CREATE_ERROR"}
+            detail=str(e)
         )
 
 
@@ -244,18 +244,18 @@ async def update_inventory_item(
         if "not found" in error_msg:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail={"detail": error_msg, "code": "PRODUCT_NOT_FOUND"}
+                detail=error_msg
             )
         else:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail={"detail": error_msg, "code": "INVALID_UPDATE"}
+                detail=error_msg
             )
     except Exception as e:
         logger.error(f"Error updating inventory for {product_id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"detail": str(e), "code": "UPDATE_ERROR"}
+            detail=str(e)
         )
 
 
@@ -296,16 +296,16 @@ async def adjust_stock(
         if "not found" in error_msg:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail={"detail": error_msg, "code": "PRODUCT_NOT_FOUND"}
+                detail=error_msg
             )
         else:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail={"detail": error_msg, "code": "INSUFFICIENT_STOCK"}
+                detail=error_msg
             )
     except Exception as e:
         logger.error(f"Error adjusting stock for {product_id}: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail={"detail": str(e), "code": "ADJUST_ERROR"}
+            detail=str(e)
         )

@@ -74,33 +74,6 @@ app.add_middleware(
 )
 
 
-# Global Exception Handlers
-@app.exception_handler(400)
-async def bad_request_handler(request: Request, exc: Exception):
-    """Handle 400 Bad Request errors."""
-    logger.warning(f"Bad request: {exc}")
-    return JSONResponse(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        content={
-            "detail": "Bad request - invalid input data",
-            "code": "BAD_REQUEST"
-        }
-    )
-
-
-@app.exception_handler(404)
-async def not_found_handler(request: Request, exc: Exception):
-    """Handle 404 Not Found errors."""
-    logger.warning(f"Resource not found: {request.url.path}")
-    return JSONResponse(
-        status_code=status.HTTP_404_NOT_FOUND,
-        content={
-            "detail": "Resource not found",
-            "code": "NOT_FOUND"
-        }
-    )
-
-
 @app.exception_handler(500)
 async def internal_server_error_handler(request: Request, exc: Exception):
     """Handle 500 Internal Server errors."""
