@@ -11,6 +11,58 @@ from prometheus_client import Counter, Histogram, Gauge, generate_latest, CONTEN
 from pythonjsonlogger import jsonlogger
 import sys
 
+# OpenTelemetry imports
+from opentelemetry import trace
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.exporter.jaeger.thrift import JaegerExporter
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+from opentelemetry.instrumentation.pymongo import PymongoInstrumentor
+
+
+def setup_tracing(service_name: str = "inventory-service", jaeger_host: str = "localhost", jaeger_port: int = 6831):
+    """
+    Configure OpenTelemetry tracing with Jaeger exporter.
+    
+    Args:
+        service_name: Name of the service for tracing
+        jaeger_host: Jaeger agent hostname
+        jaeger_port: Jaeger agent port (default: 6831 for UDP)
+    """
+    # Create a resource with service name
+    resource = Resource(attributes={
+        SERVICE_NAME: service_name
+    })
+    
+    # Create tracer provider
+    provider = TracerProvider(resource=resource)
+    
+    # Configure Jaeger exporter
+    jaeger_exporter = JaegerExporter(
+        agent_host_name=jaeger_host,
+        agent_port=jaeger_port,
+    )
+    
+    # Add span processor
+    processor = BatchSpanProcessor(jaeger_exporter)
+    provider.add_span_processor(processor)
+    
+    # Set global tracer provider
+    trace.set_tracer_provider(provider)
+    
+    # Auto-instrument FastAPI
+    FastAPIInstrumentor().instrument()
+    
+    # Auto-instrument PyMongo
+    PymongoInstrumentor().instrument()
+    
+    return trace.get_tracer(__name__)
+
+
+# Get tracer for manual instrumentation
+tracer = trace.get_tracer(__name__)
+
 # Prometheus Metrics - HTTP
 HTTP_REQUESTS_TOTAL = Counter(
     'http_requests_total',

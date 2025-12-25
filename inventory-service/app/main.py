@@ -14,11 +14,15 @@ from app.routers import inventory
 from app.observability import (
     StructuredLogger,
     RequestTracingMiddleware,
-    get_prometheus_metrics
+    get_prometheus_metrics,
+    setup_tracing
 )
 
 # Configure structured logging
 logger = StructuredLogger.setup_logger(__name__)
+
+# Setup distributed tracing with Jaeger
+setup_tracing(service_name="inventory-service", jaeger_host=settings.JAEGER_HOST, jaeger_port=settings.JAEGER_PORT)
 
 
 @asynccontextmanager

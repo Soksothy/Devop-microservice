@@ -24,6 +24,10 @@ class Settings(BaseSettings):
     # CORS Configuration
     CORS_ORIGINS: list[str] = ["*"]
     
+    # Observability Configuration
+    JAEGER_HOST: str = "localhost"
+    JAEGER_PORT: int = 6831
+    
     # Pagination Defaults
     DEFAULT_PAGE_SIZE: int = 20
     MAX_PAGE_SIZE: int = 100

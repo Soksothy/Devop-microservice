@@ -30,8 +30,10 @@ services:
       DATABASE_NAME: inventory_db
       PORT: 8001
       ENVIRONMENT: production
+      JAEGER_HOST: jaeger
     depends_on:
       - mongodb
+      - jaeger
     networks:
       - inventory-network
     healthcheck:
@@ -46,6 +48,25 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+
+  # Jaeger - Distributed Tracing
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: inventory-jaeger
+    restart: unless-stopped
+    ports:
+      - "5775:5775/udp"  # Zipkin compact thrift (deprecated)
+      - "6831:6831/udp"  # Jaeger compact thrift
+      - "6832:6832/udp"  # Jaeger binary thrift
+      - "5778:5778"      # Serve configs
+      - "16686:16686"    # Jaeger UI
+      - "14268:14268"    # Jaeger collector HTTP
+      - "14250:14250"    # Jaeger gRPC
+      - "9411:9411"      # Zipkin compatible endpoint
+    environment:
+      - COLLECTOR_ZIPKIN_HOST_PORT=:9411
+    networks:
+      - inventory-network
 
   # Prometheus
   prometheus:
