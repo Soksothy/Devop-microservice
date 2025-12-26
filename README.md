@@ -1,4 +1,4 @@
-# Inventory Microservice 🏪
+# Inventory Microservice 
 
 A production-ready FastAPI microservice for managing e-commerce inventory with MongoDB, featuring automated CI/CD deployment to DigitalOcean.
 
