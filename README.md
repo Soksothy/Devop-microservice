@@ -331,6 +331,7 @@ inventory-service/
 │   ├── config.py            # Configuration settings
 │   ├── database.py          # MongoDB connection
 │   ├── schemas.py           # Pydantic models
+│   ├── observability.py     # Metrics, logging & tracing
 │   ├── models/
 │   │   ├── __init__.py
 │   │   └── inventory.py     # Business logic
@@ -339,14 +340,19 @@ inventory-service/
 │       └── inventory.py     # API endpoints
 ├── tests/
 │   ├── __init__.py
-│   └── test_inventory.py    # Test suite
+│   └── test_inventory.py    # Test suite (16 tests, 78%+ coverage)
 ├── .github/
 │   └── workflows/
-│       └── ci-cd.yml        # GitHub Actions
-├── Dockerfile               # Multi-stage build
-├── docker-compose.yml       # Local development
-├── requirements.txt         # Python dependencies
-└── README.md               # This file
+│       └── ci-cd.yml        # GitHub Actions CI/CD pipeline
+├── Dockerfile                      # Multi-stage production build
+├── docker-compose.yml              # Local development stack
+├── docker-compose.observability.yml # Full monitoring stack (Prometheus + Grafana)
+├── prometheus.yml                  # Prometheus scrape configuration
+├── grafana-datasources.yml         # Grafana datasource config
+├── requirements.txt                # Python dependencies
+├── Inventory_API.postman_collection.json  # Postman collection
+├── POSTMAN_GUIDE.md               # Postman usage guide
+└── README.md                      # This file
 ```
 
 ## 🔧 Configuration
