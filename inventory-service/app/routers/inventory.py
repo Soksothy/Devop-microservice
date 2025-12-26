@@ -365,6 +365,52 @@ async def check_stock_availability(
         )
 
 
+@router.delete(
+    "/inventory/items/{product_id}",
+    response_model=InventoryResponse,
+    tags=["Inventory"]
+)
+async def delete_inventory_item(
+    product_id: str,
+    db: AsyncIOMotorDatabase = Depends(get_database)
+):
+    """
+    Delete an inventory item.
+    
+    Args:
+        product_id: Product identifier
+        
+    Returns:
+        Deleted inventory record
+        
+    Raises:
+        HTTPException: 404 if product not found
+    """
+    try:
+        model = InventoryModel(db)
+        inventory = await model.delete_inventory(product_id)
+        
+        return InventoryResponse(
+            product_id=inventory["product_id"],
+            quantity=inventory["quantity"],
+            warehouse_location=inventory["warehouse_location"],
+            created_at=inventory["created_at"],
+            updated_at=inventory["updated_at"]
+        )
+        
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except Exception as e:
+        logger.error(f"Error deleting inventory for {product_id}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e)
+        )
+
+
 @router.post(
     "/inventory/check-availability/bulk",
     response_model=BulkStockAvailabilityResponse,

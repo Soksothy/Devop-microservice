@@ -200,6 +200,37 @@ class InventoryModel:
         logger.info(f"Adjusted stock for product {product_id} by {data.quantity} to {new_quantity}")
         return await self.get_inventory(product_id)
     
+    async def delete_inventory(self, product_id: str) -> dict:
+        """
+        Delete an inventory record.
+        
+        Args:
+            product_id: Product identifier
+            
+        Returns:
+            Deleted inventory document
+            
+        Raises:
+            ValueError: If product not found
+        """
+        inventory = await self.get_inventory(product_id)
+        if not inventory:
+            raise ValueError(f"Product {product_id} not found")
+        
+        # Log the deletion
+        await self._log_movement(
+            product_id=product_id,
+            quantity_change=-inventory["quantity"],
+            new_quantity=0,
+            reason="Inventory item deleted"
+        )
+        
+        # Delete the inventory record
+        await self.collection.delete_one({"product_id": product_id})
+        
+        logger.info(f"Deleted inventory for product {product_id}")
+        return inventory
+    
     async def _log_movement(
         self,
         product_id: str,
